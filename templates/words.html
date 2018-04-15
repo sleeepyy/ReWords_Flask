@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block body %}
+  <ul class=entries>
+  {% for word in words %}
+    <li><h2>{{ word.word }}</h2>{{ word.translation|safe }}
+  {% else %}
+    <li><em>No words here so far</em>
+  {% endfor %}
+  </ul>
+{% endblock %}

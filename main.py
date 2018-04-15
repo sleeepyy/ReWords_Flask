@@ -21,6 +21,10 @@ def get_db():
         connect_db()
     return g.db
 
+@app.before_request
+def prepare_db():
+    get_db()
+
 @app.teardown_appcontext
 def close_db(error):
     """Closes the database again at the end of the request."""
@@ -37,7 +41,7 @@ def init_db():
 
 @app.route('/')
 def show_users():
-    get_db()
+    # get_db()
     cur = g.db.execute('select id, username from users order by id desc')
     entries = [dict(id=row[0], username=row[1]) for row in cur.fetchall()]
     return render_template('show_users.html', entries=entries)
@@ -55,21 +59,35 @@ def add_user():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
+    # get_db()
     if request.method == 'POST':
-        if request.form['username'] != app.config['USERNAME']:
-            error = 'Invalid username'
-        elif request.form['password'] != app.config['PASSWORD']:
-            error = 'Invalid password'
-        else:
+        
+        cur = g.db.execute('select id from users where username=(?) and password=(?)', 
+           (request.form['username'], request.form['password']))
+        result = cur.fetchall()
+        if len(result) == 1:
+            flash('success')
             session['logged_in'] = True
-            flash('You were logged in')
+            session['id'] = result[0][0]
+            session['name'] = request.form['username']
             return redirect(url_for('show_users'))
+        else:
+            flash("Login failed. Pls check.")
+
+        # if request.form['username'] != app.config['USERNAME']:
+        #     error = 'Invalid username'
+        # elif request.form['password'] != app.config['PASSWORD']:
+        #     error = 'Invalid password'
+        # else:
+        #     session['logged_in'] = True
+        #     flash('You were logged in')
+        #     return redirect(url_for('show_users'))
     return render_template('login.html', error=error)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     error = None
-    get_db()
+    # get_db()
     if request.method == 'POST':
         if request.form['username'] and request.form['password']:
             g.db.execute('insert into users (username, password) values (?, ?)',
@@ -90,6 +108,4 @@ def user(name):
     return render_template('user.html', name=name)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db = get_db()
     app.run(debug=True)
