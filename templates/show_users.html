@@ -17,5 +17,10 @@
   {% else %}
     <li><em>Unbelievable.  No entries here so far</em>
   {% endfor %}
+  {% for word in words %}
+  <li><h2>{{ word.word }}</h2>{{ word.translation|safe }}
+  {% else %}
+    <li><em>Unbelievable.  No words here so far</em>
+  {% endfor %}
   </ul>
 {% endblock %}

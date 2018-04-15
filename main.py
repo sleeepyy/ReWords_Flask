@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
-from word_process import process
+from util import words
 
 app = Flask(__name__)
 app.config.from_object('config.DevelopmentConfig')
@@ -35,17 +35,28 @@ def close_db(error):
 def init_db():
     with app.app_context():
         db = get_db()
-        g.db = db
         with app.open_resource('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()
+        cet4_words = words.process_words('CET4.words')
+        cet6_words = words.process_words('CET6.words')
+        for word, translation in cet4_words.items():
+            db.execute('insert into cet4 (word, translation) values (?, ?)', (word, translation))
+        db.commit()
+        for word, translation in cet6_words.items():
+            db.execute('insert into cet6 (word, translation) values (?, ?)', (word, translation))
+        db.commit()
+        
+
 
 @app.route('/')
 def show_users():
     # get_db()
     cur = g.db.execute('select id, username from users order by id desc')
     entries = [dict(id=row[0], username=row[1]) for row in cur.fetchall()]
-    return render_template('show_users.html', entries=entries)
+    cur = g.db.execute('select word, translation from cet4')
+    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+    return render_template('show_users.html', entries=entries, words=words)
 
 @app.route('/add', methods=['POST'])
 def add_user():
