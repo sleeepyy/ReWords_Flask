@@ -50,13 +50,13 @@ def init_db():
 
 
 @app.route('/')
-def show_users():
+def home():
     # get_db()
     cur = g.db.execute('select id, username from users order by id desc')
     entries = [dict(id=row[0], username=row[1]) for row in cur.fetchall()]
     cur = g.db.execute('select word, translation from cet4')
     words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
-    return render_template('show_users.html', entries=entries, words=words)
+    return render_template('home.html', entries=entries, words=words)
 
 @app.route('/add', methods=['POST'])
 def add_user():
@@ -66,7 +66,7 @@ def add_user():
                  [request.form['id'], request.form['username']])
     g.db.commit()
     flash('New entry was successfully posted')
-    return redirect(url_for('show_users'))
+    return redirect(url_for('home'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -82,7 +82,7 @@ def login():
             session['logged_in'] = True
             session['id'] = result[0][0]
             session['name'] = request.form['username']
-            return redirect(url_for('show_users'))
+            return redirect(url_for('home'))
         else:
             flash("Login failed. Pls check.")
 
@@ -93,7 +93,7 @@ def login():
         # else:
         #     session['logged_in'] = True
         #     flash('You were logged in')
-        #     return redirect(url_for('show_users'))
+        #     return redirect(url_for('home'))
     return render_template('login.html', error=error)
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -102,18 +102,18 @@ def signup():
     # get_db()
     if request.method == 'POST':
         if request.form['username'] and request.form['password']:
-            g.db.execute('insert into users (username, password) values (?, ?)',
-                 [request.form['username'], request.form['password']])
+            g.db.execute('insert into users (username, password, email) values (?, ?, ?)',
+                 [request.form['username'], request.form['password'], request.form['email']])
             g.db.commit()
             flash('signup success!')
-            return redirect(url_for('show_users'))
+            return redirect(url_for('home'))
     return render_template('signup.html', error=error)
 
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
-    return redirect(url_for('show_users'))
+    return redirect(url_for('home'))
 
 @app.route('/user/<name>')
 def user(name):
