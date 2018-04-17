@@ -39,8 +39,8 @@ def init_db():
         with app.open_resource('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()
-        cet4_words = list(words.process_words('CET4.words').items())
-        cet6_words = list(words.process_words('CET6.words').items())
+        cet4_words = list(get_words.process_words('CET4.words').items())
+        cet6_words = list(get_words.process_words('CET6.words').items())
         random.shuffle(cet4_words)
         random.shuffle(cet6_words)
 
@@ -56,7 +56,6 @@ def prepare_word(user_id, book):
     cur = g.db.execute('select book from userwords where id=(?)', str(user_id))
     books = cur.fetchall()
     if book in books:
-        print("already user words")
         return
     else:
         del cur
@@ -66,7 +65,6 @@ def prepare_word(user_id, book):
             g.db.execute('insert into userwords (id, book, word, translation, review) values (?, ?, ?, ?, ?)', 
                (session['id'], book, word, translation, random.randint(0, 100)))
         g.db.commit()
-        print("load user words")
         return
             
 
@@ -77,21 +75,26 @@ def home():
     return render_template('home.html', entries=entries)
 
 @app.route('/words')
-def memorize():
-    cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review', (session['id'], session['book']))
+def get_words():
+    cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review', (str(session['id']), session['book']))
     words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
     return render_template('words.html', words=words)
 
-@app.route('/word')
+@app.route('/word', methods=['GET', 'POST'])
 def word():
-    if not session.get('words'):
-        print(session['id'], session['book'])
-        cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review', (str(session['id']), session['book']))
+    cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review limit 1', (str(session['id']), session['book']))
+    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+    word = words[0]
+    if request.method == 'POST':
+        if request.form['submit'] == '记得':
+            g.db.execute('update userwords set review = review+10 where id=(?) and book=(?) and word=(?)', (str(session['id']), session['book'], word['word']))
+        if request.form['submit'] == '忘记':
+            g.db.execute('update userwords set review= review+5 where id=(?) and book=(?) and word=(?)', (str(session['id']), session['book'], word['word']))
+        g.db.commit()
+        cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review limit 1', (str(session['id']), session['book']))
         words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
-        session['words'] = words
-    words = session['words']
-    # print(words)
-    return render_template('word.html', word=random.choice(words))
+        word = words[0]
+    return render_template('word.html', word=word)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():

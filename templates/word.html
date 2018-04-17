@@ -5,10 +5,10 @@
     <br>
     <p>{{ word.translation|safe }}</p> 
 </div>
-<div class=operatoins align=center>
-    <button value="记得" align=center onclick="location.reload()">记得</button>
+<form action="{{ url_for('word') }}" method=post class=word align=center>
+    <input type="submit" name="submit" value="记得">
     <br>
     <br>
-    <button value="忘记" align=center onclick="location.reload()">忘记</button>
-</div>
+    <input type="submit" name="submit" value="忘记">
+</form>
 {% endblock %}
