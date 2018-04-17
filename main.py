@@ -39,40 +39,79 @@ def init_db():
         with app.open_resource('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()
-        cet4_words = words.process_words('CET4.words')
-        cet6_words = words.process_words('CET6.words')
-        for word, translation in cet4_words.items():
+        cet4_words = list(words.process_words('CET4.words').items())
+        cet6_words = list(words.process_words('CET6.words').items())
+        random.shuffle(cet4_words)
+        random.shuffle(cet6_words)
+
+        for word, translation in cet4_words:
             db.execute('insert into cet4 (word, translation) values (?, ?)', (word, translation))
         db.commit()
-        for word, translation in cet6_words.items():
+        for word, translation in cet6_words:
             db.execute('insert into cet6 (word, translation) values (?, ?)', (word, translation))
         db.commit()
         
 
+def prepare_word(user_id, book):
+    cur = g.db.execute('select book from userwords where id=(?)', str(user_id))
+    books = cur.fetchall()
+    if book in books:
+        print("already user words")
+        return
+    else:
+        del cur
+        cur = g.db.execute('select word, translation from '+book)
+        words = cur.fetchall()
+        for word, translation in words:
+            g.db.execute('insert into userwords (id, book, word, translation, review) values (?, ?, ?, ?, ?)', 
+               (session['id'], book, word, translation, random.randint(0, 100)))
+        g.db.commit()
+        print("load user words")
+        return
+            
 
 @app.route('/')
 def home():
-    # get_db()
     cur = g.db.execute('select id, username from users order by id desc')
     entries = [dict(id=row[0], username=row[1]) for row in cur.fetchall()]
     return render_template('home.html', entries=entries)
 
-@app.route('/add', methods=['POST'])
-def add_user():
-    if not session.get('logged_in'):
-        abort(401)
-    g.db.execute('insert into users (id, username) values (?, ?)',
-                 [request.form['id'], request.form['username']])
-    g.db.commit()
-    flash('New entry was successfully posted')
-    return redirect(url_for('home'))
+@app.route('/words')
+def memorize():
+    cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review', (session['id'], session['book']))
+    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+    return render_template('words.html', words=words)
 
-@app.route('/login/', methods=['GET', 'POST'])
+@app.route('/word')
+def word():
+    if not session.get('words'):
+        print(session['id'], session['book'])
+        cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review', (str(session['id']), session['book']))
+        words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+        session['words'] = words
+    words = session['words']
+    # print(words)
+    return render_template('word.html', word=random.choice(words))
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    error = None
+    if request.method == 'POST':
+        if request.form['username'] and request.form['password']:
+            g.db.execute('insert into users (username, password, email) values (?, ?, ?)',
+                 [request.form['username'], request.form['password'], request.form['email']])
+            g.db.commit()
+            cur = g.db.execute('select word, translation from cet4')
+            words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+            flash('signup success!')
+            return redirect(url_for('home'))
+    return render_template('signup.html', error=error)
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
-    # get_db()
     if request.method == 'POST':
-        cur = g.db.execute('select id from users where username=(?) and password=(?)', 
+        cur = g.db.execute('select id, book from users where username=(?) and password=(?)', 
            (request.form['username'], request.form['password']))
         result = cur.fetchall()
         if len(result) == 1:
@@ -80,44 +119,12 @@ def login():
             session['logged_in'] = True
             session['id'] = result[0][0]
             session['name'] = request.form['username']
+            session['book'] = result[0][1]
+            prepare_word(session['id'], session['book'])
             return redirect(url_for('home'))
         else:
             flash("Login failed. Pls check.")
-
-        # if request.form['username'] != app.config['USERNAME']:
-        #     error = 'Invalid username'
-        # elif request.form['password'] != app.config['PASSWORD']:
-        #     error = 'Invalid password'
-        # else:
-        #     session['logged_in'] = True
-        #     flash('You were logged in')
-        #     return redirect(url_for('home'))
     return render_template('login.html', error=error)
-
-@app.route('/words/')
-def memorize():
-    cur = g.db.execute('select word, translation from cet4')
-    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
-    return render_template('words.html', words=words)@app.route('/words/')
-
-@app.route('/word/')
-def word():
-    cur = g.db.execute('select word, translation from cet4')
-    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
-    return render_template('word.html', word=random.choice(words))
-
-@app.route('/signup/', methods=['GET', 'POST'])
-def signup():
-    error = None
-    # get_db()
-    if request.method == 'POST':
-        if request.form['username'] and request.form['password']:
-            g.db.execute('insert into users (username, password, email) values (?, ?, ?)',
-                 [request.form['username'], request.form['password'], request.form['email']])
-            g.db.commit()
-            flash('signup success!')
-            return redirect(url_for('home'))
-    return render_template('signup.html', error=error)
 
 @app.route('/logout')
 def logout():
@@ -125,9 +132,9 @@ def logout():
     flash('You were logged out')
     return redirect(url_for('home'))
 
-@app.route('/user/<name>')
-def user(name):
-    return render_template('user.html', name=name)
+# @app.route('/user/<name>')
+# def user(name):
+#     return render_template('user.html', name=name)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

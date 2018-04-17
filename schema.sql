@@ -2,13 +2,14 @@ drop table if exists users;
 drop table if exists words;
 drop table if exists cet4;
 drop table if exists cet6;
+drop table if exists userwords;
 
 create table users (
   id integer primary key autoincrement,
   username string not null,
   password string not null,
   email string not null,
-  words string default 'cet4'
+  book string default 'cet4'
 );
 
 create table words (
@@ -32,6 +33,7 @@ create table userwords (
     id integer not null,
     book string not null,
     word string not null,
-    review int not null,
+    translation string not null,
+    review int not null default 0,
     primary key(id, book, word)
 )
