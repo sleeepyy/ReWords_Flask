@@ -2,6 +2,7 @@ import os
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 from util import words
+import random
 
 app = Flask(__name__)
 app.config.from_object('config.DevelopmentConfig')
@@ -54,9 +55,7 @@ def home():
     # get_db()
     cur = g.db.execute('select id, username from users order by id desc')
     entries = [dict(id=row[0], username=row[1]) for row in cur.fetchall()]
-    cur = g.db.execute('select word, translation from cet4')
-    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
-    return render_template('home.html', entries=entries, words=words)
+    return render_template('home.html', entries=entries)
 
 @app.route('/add', methods=['POST'])
 def add_user():
@@ -68,12 +67,11 @@ def add_user():
     flash('New entry was successfully posted')
     return redirect(url_for('home'))
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login/', methods=['GET', 'POST'])
 def login():
     error = None
     # get_db()
     if request.method == 'POST':
-        
         cur = g.db.execute('select id from users where username=(?) and password=(?)', 
            (request.form['username'], request.form['password']))
         result = cur.fetchall()
@@ -96,7 +94,19 @@ def login():
         #     return redirect(url_for('home'))
     return render_template('login.html', error=error)
 
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/words/')
+def memorize():
+    cur = g.db.execute('select word, translation from cet4')
+    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+    return render_template('words.html', words=words)@app.route('/words/')
+
+@app.route('/word/')
+def word():
+    cur = g.db.execute('select word, translation from cet4')
+    words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+    return render_template('word.html', word=random.choice(words))
+
+@app.route('/signup/', methods=['GET', 'POST'])
 def signup():
     error = None
     # get_db()

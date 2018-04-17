@@ -7,7 +7,8 @@ create table users (
   id integer primary key autoincrement,
   username string not null,
   password string not null,
-  email string not null
+  email string not null,
+  words string default 'cet4'
 );
 
 create table words (
@@ -26,3 +27,11 @@ create table cet6 (
     word string primary key not null,
     translation string not null
 );
+
+create table userwords (
+    id integer not null,
+    book string not null,
+    word string not null,
+    review int not null,
+    primary key(id, book, word)
+)

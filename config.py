@@ -2,8 +2,6 @@ class Config(object):
     DEBUG = False
     TESTING = False
     DATABASE = 'rewords.db'
-    USERNAME = 'admin'
-    PASSWORD = 'hhh'
     SECRET_KEY = 'fff'
 
 class ProductionConfig(Config):

@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class=word align=center>
+    <h2>{{ word.word }}</h2>
+    <br>
+    <p>{{ word.translation|safe }}</p> 
+</div>
+<div class=operatoins align=center>
+    <button value="记得" align=center>记得</button>
+    <br>
+    <br>
+    <button value="忘记" align=center>忘记</button>
+</div>
+{% endblock %}
