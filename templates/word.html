@@ -1,14 +1,24 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class=word align=center>
+<!-- <div class=word align=center>
     <h2>{{ word.word }}</h2>
     <br>
     <p>{{ word.translation|safe }}</p> 
+</div> -->
+<div class="panel panel-info" align="center">
+    <div class="panel-heading">
+        <h2 class="panel-title"> {{ word.word }} </h2>
+    </div>
+    <div class="panel-body">
+        <p>{{ word.translation|safe }}</p>
+    </div>
+    
+    <div  class="word" align="center">
+        <form action="{{ url_for('word') }}" method=post>
+            <input type="submit" name="submit" value="记得" class="btn btn-success btn-block">
+            <br>
+            <input type="submit" name="submit" value="忘记" class="btn btn-warning btn-block">
+        </form>
+    </div>
 </div>
-<form action="{{ url_for('word') }}" method=post class=word align=center>
-    <input type="submit" name="submit" value="记得">
-    <br>
-    <br>
-    <input type="submit" name="submit" value="忘记">
-</form>
 {% endblock %}

@@ -1,10 +1,26 @@
 {% extends "layout.html" %}
 {% block body %}
-  <ul class=entries>
-  {% for entry in entries %}
-    <li><h2>{{ entry.id }}</h2>{{ entry.username|safe }}
+  {% if not session.logged_in %}
+  <div class="welcome" align="center">
+    <p>Please Login to Use This~</p>
+    <form action="{{ url_for('login') }}" method=getalign=center>
+      <input type=submit value="Login!" class="btn btn-primary">
+    </form>
+    <p>No account yet? Sign up first!</p>
+    <form action="{{ url_for('signup') }}" method=get align=center>
+      <input type=submit value="Sign Up!" class="btn btn-primary">
+    </form>
+
+  </div>    
   {% else %}
-    <li><em>Unbelievable.  No entries here so far</em>
-  {% endfor %}
-  </ul>
+  <div class="start" align="center">
+    <p>Click to start!</p>
+    <form action="{{ url_for('word') }}" method=get class=add-entry>
+      <input type=submit value="Start!" class="btn btn-primary">
+    </form>
+  </div>
+  {% endif %}
+
+
+
 {% endblock %}

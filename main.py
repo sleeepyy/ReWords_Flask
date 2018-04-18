@@ -53,8 +53,9 @@ def init_db():
         
 
 def prepare_word(user_id, book):
-    cur = g.db.execute('select book from userwords where id=(?)', str(user_id))
-    books = cur.fetchall()
+    cur = g.db.execute('select distinct book from userwords where id=(?)', str(user_id))
+    books = [row[0] for row in cur.fetchall()]
+    # print(books)
     if book in books:
         return
     else:
