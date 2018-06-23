@@ -1,0 +1,26 @@
+{% extends "layout.html" %} 
+{% block body %}
+<center>
+    <form action="{{ url_for('books') }}" method="POST">
+        <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-info active">
+                <input type="radio" name="book" id="option1" value="cet4"> CET-4
+            </label>
+            <br>
+            <br>
+            <label class="btn btn-info ">
+                <input type="radio" name="book" id="option2" value="cet6"> CET-6
+            </label>
+            <br>
+            <br>
+            <label class="btn btn-info">
+                <input type="radio" name="book" id="option3" value="words"> 自定义
+            </label>
+            <br>
+            <br>
+        </div>
+        <button class="btn btn-success btn-block" type="submit">OK!</button>
+    </form>
+</center>
+
+{% endblock %}

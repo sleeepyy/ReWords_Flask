@@ -55,7 +55,6 @@ def init_db():
 def prepare_word(user_id, book):
     cur = g.db.execute('select distinct book from userwords where id=(?)', str(user_id))
     books = [row[0] for row in cur.fetchall()]
-    # print(books)
     if book in books:
         return
     else:
@@ -75,8 +74,8 @@ def home():
     entries = [dict(id=row[0], username=row[1]) for row in cur.fetchall()]
     return render_template('home.html', entries=entries)
 
-@app.route('/words')
-def get_words():
+@app.route('/review')
+def review():
     cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review', (str(session['id']), session['book']))
     words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
     return render_template('words.html', words=words)
@@ -85,6 +84,11 @@ def get_words():
 def word():
     cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review limit 1', (str(session['id']), session['book']))
     words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
+    if len(words) == 1:
+        word = words[0]
+    else:
+        flash("No words yet. Please add words for this book first.")
+        return redirect(url_for('home'))
     word = words[0]
     if request.method == 'POST':
         if request.form['submit'] == '记得':
@@ -94,36 +98,60 @@ def word():
         g.db.commit()
         cur = g.db.execute('select word, translation from userwords where id=(?) and book=(?) order by review limit 1', (str(session['id']), session['book']))
         words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
-        word = words[0]
+
     return render_template('word.html', word=word)
+
+@app.route('/books', methods=['GET', 'POST'])
+def books():
+    # all_books = ['CET-4', 'CET-6', 'Self-Defined']
+    if request.method == 'POST':
+        print(request.form['book'])  
+        session['book'] = request.form['book']
+        print('update users set book ='+session['book']+' where id=(?)')
+        g.db.execute('update users set book ="'+session['book']+'" where id=(?)', (str(session['id'])))
+        g.db.commit()
+        prepare_word(session['id'], session['book'])
+        return redirect(url_for('home'))
+    return render_template('books.html')
+    
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     error = None
     if request.method == 'POST':
-        if request.form['username'] and request.form['password']:
+        try:
             g.db.execute('insert into users (username, password, email) values (?, ?, ?)',
                  [request.form['username'], request.form['password'], request.form['email']])
             g.db.commit()
             cur = g.db.execute('select word, translation from cet4')
             words = [dict(word=row[0], translation=row[1]) for row in cur.fetchall()]
-            flash('signup success!')
+            flash('Signup success!')
             return redirect(url_for('home'))
+        except Exception as e:
+            print(e)
+            flash('Signup failed')
     return render_template('signup.html', error=error)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     if request.method == 'POST':
-        cur = g.db.execute('select id, book from users where username=(?) and password=(?)', 
-           (request.form['username'], request.form['password']))
-        result = cur.fetchall()
+        print(request.form['email'], request.form['password'])
+        try:
+            cur = g.db.execute('select id, book from users where email=(?) and password=(?)', 
+            (request.form['email'], request.form['password']))
+            # print(request.form['email'], request.form['password'])
+            result = cur.fetchall()
+        except Exception as e:
+            print(e)
+            flash("Login failed. Please check.")
         if len(result) == 1:
             flash('success')
+            # print(result[0][0], result[0][1])
             session['logged_in'] = True
             session['id'] = result[0][0]
-            session['name'] = request.form['username']
             session['book'] = result[0][1]
+            print(session)
             prepare_word(session['id'], session['book'])
             return redirect(url_for('home'))
         else:
@@ -136,9 +164,6 @@ def logout():
     flash('You were logged out')
     return redirect(url_for('home'))
 
-# @app.route('/user/<name>')
-# def user(name):
-#     return render_template('user.html', name=name)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

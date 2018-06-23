@@ -1,14 +1,21 @@
 {% extends "layout.html" %}
 {% block body %}
-<form action="{{ url_for('signup') }}" method=post class=add-entry id="signup" align=center>
-    <input type=text name=username placeholder="username">
-    <br>
-    <input type=password name=password placeholder="password">
-    <br>
-    <input type=password placeholder="repeated password">
-    <br>
-    <input type=email name=email placeholder="email">
-    <br>
-    <input type=submit value="Sign Up!" class="btn btn-primary">
-</form>
+
+<form action="{{ url_for('signup') }}" method=post class="form-signup">
+    <!-- <h2 class="form-signin-heading">Please sign in</h2> -->
+    <label for="username" class="sr-only">Username</label>
+    <input type="text" id="username" name=username class="form-control" placeholder="Username" required="" autofocus="">
+    <label for="email" class="sr-only">Email address</label>
+    <input type="email" id="email" name=email class="form-control" placeholder="Email address" required="">
+    <label for="password" class="sr-only">Password</label>
+    <input type="password" id="password" name=password class="form-control" placeholder="Password" required="">
+    <label for="repeat_password" class="sr-only">Password</label>
+    <input type="password" id="repeat_password" name=repeat_password class="form-control" placeholder="Repeat Password" required="">
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" value="remember-me"> Auto Loggin
+      </label>
+    </div>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+  </form>
 {% endblock %}
