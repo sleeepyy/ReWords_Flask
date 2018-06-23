@@ -32,24 +32,6 @@ def close_db(error):
     """Closes the database again at the end of the request."""
     if hasattr(g, 'db'):
         g.db.close()
-
-def init_db():
-    with app.app_context():
-        db = get_db()
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-        cet4_words = list(get_words.process_words('CET4.words').items())
-        cet6_words = list(get_words.process_words('CET6.words').items())
-        random.shuffle(cet4_words)
-        random.shuffle(cet6_words)
-
-        for word, translation in cet4_words:
-            db.execute('insert into cet4 (word, translation) values (?, ?)', (word, translation))
-        db.commit()
-        for word, translation in cet6_words:
-            db.execute('insert into cet6 (word, translation) values (?, ?)', (word, translation))
-        db.commit()
         
 
 def prepare_word(user_id, book):
@@ -104,9 +86,7 @@ def word():
 @app.route('/books', methods=['GET', 'POST'])
 def books():
     if request.method == 'POST':
-        print(request.form['book'])  
         session['book'] = request.form['book']
-        print('update users set book ='+session['book']+' where id=(?)')
         g.db.execute('update users set book ="'+session['book']+'" where id=(?)', (str(session['id'])))
         g.db.commit()
         prepare_word(session['id'], session['book'])
@@ -148,18 +128,15 @@ def signup():
 def login():
     error = None
     if request.method == 'POST':
-        print(request.form['email'], request.form['password'])
         try:
             cur = g.db.execute('select id, book from users where email=(?) and password=(?)', 
             (request.form['email'], request.form['password']))
-            # print(request.form['email'], request.form['password'])
             result = cur.fetchall()
         except Exception as e:
             print(e)
             flash("Login failed. Please check.")
         if len(result) == 1:
             flash('success')
-            # print(result[0][0], result[0][1])
             session['logged_in'] = True
             session['id'] = result[0][0]
             session['book'] = result[0][1]

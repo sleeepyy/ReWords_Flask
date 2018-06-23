@@ -2,7 +2,7 @@ class Config(object):
     DEBUG = False
     TESTING = False
     DATABASE = 'rewords.db'
-    SECRET_KEY = 'fff'
+    SECRET_KEY = 'YmFzZWVzYWIK'
 
 class ProductionConfig(Config):
     pass
