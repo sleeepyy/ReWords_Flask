@@ -3,14 +3,13 @@
   {% if not session.logged_in %}
   <div class="welcome" align="center">
     <p>Please Login to Use This~</p>
-    <form action="{{ url_for('login') }}" method=getalign=center>
+    <form action="{{ url_for('login') }}" method=get align=center>
       <input type=submit value="Login!" class="btn btn-primary">
     </form>
     <p>No account yet? Sign up first!</p>
     <form action="{{ url_for('signup') }}" method=get align=center>
       <input type=submit value="Sign Up!" class="btn btn-primary">
     </form>
-
   </div>    
   {% else %}
   <div class="start" align="center">

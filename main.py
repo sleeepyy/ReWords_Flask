@@ -103,7 +103,6 @@ def word():
 
 @app.route('/books', methods=['GET', 'POST'])
 def books():
-    # all_books = ['CET-4', 'CET-6', 'Self-Defined']
     if request.method == 'POST':
         print(request.form['book'])  
         session['book'] = request.form['book']
@@ -114,6 +113,19 @@ def books():
         return redirect(url_for('home'))
     return render_template('books.html')
     
+@app.route('/manage', methods=['GET', 'POST'])
+def manage():
+    if request.method == 'POST':
+        word = request.form['word']
+        translation = request.form['translation']
+        g.db.execute('insert into words (user_id, word, translation) values(?,?,?)',(int(session['id']), word, translation ))
+        g.db.commit()
+        g.db.execute('insert into userwords (id, book, word, translation, review) values (?, ?, ?, ?, ?)', 
+               (int(session['id']), 'words', word, translation, random.randint(0, 100)))
+        g.db.commit()
+        flash('Add words successfully')
+    return render_template('manage.html')
+
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():

@@ -1,0 +1,16 @@
+{% extends "layout.html" %} {% block body %}
+
+<form role="form" method="POST">
+    <div class="form-group">
+        <label for="word">单词</label>
+        <input type="text" class="form-control" name="word" id="word" placeholder="请输入单词">
+    </div>
+    <div class="form-group">
+        <label for="translation">翻译</label>
+        <input type="text" class="form-control" name="translation" id="translation" placeholder="请输入释义">
+    </div>
+    <center>
+        <button type="submit" class="btn btn-primary">添加</button>
+    </center>
+</form>
+{% endblock %}
