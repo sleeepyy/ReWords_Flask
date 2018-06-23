@@ -98,7 +98,7 @@ def manage():
     if request.method == 'POST':
         word = request.form['word']
         translation = request.form['translation']
-        g.db.execute('insert into words (user_id, word, translation) values(?,?,?)',(int(session['id']), word, translation ))
+        g.db.execute('insert into words (user_id, word, translation) values(?,?,?)',(session['id'], word, translation))
         g.db.commit()
         g.db.execute('insert into userwords (id, book, word, translation, review) values (?, ?, ?, ?, ?)', 
                (int(session['id']), 'words', word, translation, random.randint(0, 100)))
